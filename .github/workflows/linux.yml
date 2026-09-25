@@ -7,23 +7,30 @@ jobs:
   connect:
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Setup Tmate
+      - name: 1. Setup Tmate and SSH Key
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq tmate
+          sudo apt-get install -y -qq tmate openssh-client
+          # SSH key banana zaroori hai taaki tmate na atke
+          mkdir -p ~/.ssh
+          ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N "" -q
 
       - name: 2. Get Connection Link
         run: |
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
+          
           WEB_URL=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')
           SSH_CMD=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
+          
           echo ""
           echo "=========================================================="
-          echo "AAPKA BROWSER LINK: $WEB_URL"
-          echo "AAPKA TERMUX SSH:   $SSH_CMD"
+          echo "AAPKA BROWSER LINK : $WEB_URL"
+          echo "AAPKA TERMUX SSH   : $SSH_CMD"
           echo "=========================================================="
           echo ""
 
-      - name: 3. Session Active
-        run: sleep 21600
+      - name: 3. Session Active (Running)
+        run: |
+          echo "Session live hai! Phone se access karein."
+          sleep 21600
