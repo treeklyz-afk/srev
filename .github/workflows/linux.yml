@@ -1,36 +1,42 @@
-name: Mobile Linux Terminal
+name: Mobile Linux Web
 
 on:
   workflow_dispatch:
 
 jobs:
-  connect:
+  web-terminal:
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Setup Tmate and SSH Key
+      - name: 1. Setup Web Terminal and Tunnel
         run: |
+          # 1. Install ttyd (Web Terminal)
           sudo apt-get update -qq
-          sudo apt-get install -y -qq tmate openssh-client
-          # SSH key banana zaroori hai taaki tmate na atke
-          mkdir -p ~/.ssh
-          ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N "" -q
+          sudo apt-get install -y -qq ttyd
 
-      - name: 2. Get Connection Link
-        run: |
-          tmate -S /tmp/tmate.sock new-session -d
-          tmate -S /tmp/tmate.sock wait tmate-ready
+          # 2. Download Cloudflare Tunnel (fast & reliable)
+          curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          chmod +x cloudflared
+
+          # 3. Start web terminal in background
+          ttyd -p 7681 bash &
+
+          # 4. Start Cloudflare Tunnel
+          ./cloudflared tunnel --url http://127.0.0.1:7681 > tunnel.log 2>&1 &
           
-          WEB_URL=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')
-          SSH_CMD=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
-          
+          # 5. Wait for link to generate
+          sleep 5
+          URL=$(grep -o 'https://[-a-zA-Z0-9.]*trycloudflare.com' tunnel.log | head -n 1)
+
           echo ""
           echo "=========================================================="
-          echo "AAPKA BROWSER LINK : $WEB_URL"
-          echo "AAPKA TERMUX SSH   : $SSH_CMD"
+          echo "DASHBOARD WEB LINK: $URL"
           echo "=========================================================="
           echo ""
 
-      - name: 3. Session Active (Running)
+          echo "## 🚀 Linux Web Dashboard Ready" >> $GITHUB_STEP_SUMMARY
+          echo "Aapka link: [$URL]($URL)" >> $GITHUB_STEP_SUMMARY
+
+      - name: 2. Active Session
         run: |
-          echo "Session live hai! Phone se access karein."
-          sleep 21600
+          echo "Session running. Kaam khatam hone par Cancel dabayein."
+          sleep 7200
