@@ -1,0 +1,12 @@
+name: Mobile Linux SSH
+on: [workflow_dispatch] # Manual start ke liye
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Tmate Session
+        uses: mxschmitt/action-tmate@v3
