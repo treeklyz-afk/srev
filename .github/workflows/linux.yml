@@ -1,12 +1,39 @@
-name: Mobile Linux SSH
-on: [workflow_dispatch] # Manual start ke liye
+name: Mobile Linux Terminal
+
+on:
+  workflow_dispatch:
 
 jobs:
-  build:
+  run-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Tmate Session
-        uses: mxschmitt/action-tmate@v3
+      - name: Start Terminal Session
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y tmate
+          
+          # Tmate session start
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait tmate-ready
+          
+          # Fetch connection details
+          SSH_CMD=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
+          WEB_URL=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')
+          
+          # Logs me print karein
+          echo "=================================================="
+          echo "WEB URL: $WEB_URL"
+          echo "SSH CMD: $SSH_CMD"
+          echo "=================================================="
+          
+          # Direct GitHub Summary tab me bhejein (Mobile ke liye best)
+          echo "## 🚀 Mobile Linux Ready!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Browser me chalane ke liye is link par tap karein:**" >> $GITHUB_STEP_SUMMARY
+          echo "[$WEB_URL]($WEB_URL)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Termux ke liye SSH command:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`$SSH_CMD\`" >> $GITHUB_STEP_SUMMARY
+          
+          # Session ko 6 ghante tak active rakhein
+          sleep 21600
